@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+<head>
+<script>
+async function submitForm() {
+    const downloadFormatted = document.getElementById("out1");
+    downloadFormatted.href = "";
+    downloadFormatted.download = "";
+    downloadFormatted.innerHTML = "";
+    const downloadUnfound = document.getElementById("out2");
+    downloadUnfound.href = "";
+    downloadUnfound.download = "";
+    downloadUnfound.innerHTML = "";
+
+    const billSelect = document.getElementById('billSelect');
+    const utilSelect = document.getElementById('utilSelect');
+
+    const formData = new FormData();
+    formData.append('bill', billSelect.files[0]);
+    formData.append('utilForm', utilSelect.files[0]);
+
+    if ('files' in billSelect && 'files' in utilSelect) {
+        await fetch("http://104.198.221.105/v1/billing/optus/parse", {
+            method: 'POST',
+            //mode: 'no-cors',
+            //credentials: 'same-origin',
+            // headers: {
+            //     'Content-Type': 'multipart/form-data'
+            // },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log(data);
+            if ('data' in data) {
+                const downloadFormatted = document.getElementById("out1");
+                downloadFormatted.href = "data:text/csv;base64," + data['data'][0];
+                downloadFormatted.download = "formatted.csv";
+                downloadFormatted.innerHTML = "Download formatted.csv";
+                const downloadUnfound = document.getElementById("out2");
+                downloadUnfound.href = "data:text/csv;base64," + data['data'][1];
+                downloadUnfound.download = "not_found.csv";
+                downloadUnfound.innerHTML = "Download not_found.csv";
+            }
+            
+        })
+        .catch(err => console.log(err));
+    }
+}
+</script>
+</head>
+
+<body>
+    <label for="billSelect">Please select the optus bill</label><br>
+    <input type="file" id="billSelect"><br><br>
+    <label for="utilSelect">Please select the utilmate billing template</label><br>
+    <input type="file" id="utilSelect"><br><br>
+    <button onclick="submitForm()">Format Bill</button><br><br>
+    <div id="output">
+        <a id="out1"></a><br>
+        <a id="out2"></a>
+    </div>
+</body>
